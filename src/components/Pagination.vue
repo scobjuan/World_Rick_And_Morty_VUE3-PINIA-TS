@@ -1,38 +1,19 @@
 <template>
   <div class="content-pagination">
     <ul class="content-pagination--list list-pagination">
-      <!-- <li class="list-pagination--item current-page">
-        <a class="list-pagination--item__link" href="#">1</a>
-      </li> -->
-      <li
-        class="list-pagination--item"
-        v-if="page === pagination.totalPages / 5"
+      <div
+        class="list-pagination--set-pagination"
+        v-for="(iteration, index) in pagination.totalPages / 5"
+        :key="index"
       >
-        <a class="list-pagination--item__link" href="#" @click="reducePage()"
-          >...</a
-        >
-      </li>
-      <div v-for="(iteration, index) in pagination.totalPages / 5" :key="index">
         <li
           class="list-pagination--item"
           v-for="(iteration2, index2) in 5"
           :key="iteration2"
-          v-show="index === page"
         >
           <a class="list-pagination--item__link" href="#">
             {{ (count += 1) }}
           </a>
-        </li>
-        <li
-          v-if="index === page && page !== pagination.totalPages / 5"
-          class="list-pagination--item"
-        >
-          <a
-            class="list-pagination--item__link"
-            href="#"
-            @click="incrementPage()"
-            >...</a
-          >
         </li>
       </div>
     </ul>
@@ -40,27 +21,37 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onBeforeUpdate } from 'vue';
 import { useCharactersStore } from '../store/CharactersStore.ts';
 export default defineComponent({
   setup() {
     const pagination = useCharactersStore().pagination;
-    const count = 0;
-    let page = ref(1);
+    let count = 0;
+    let numberSetPages = ref(0);
 
-    const incrementPage = () => {
-      page.value += 1;
+    onBeforeUpdate(() => {
+      count.value = 0;
+    });
+
+    const nextSetPages = () => {
+      numberSetPages.value += 1;
+
+      const contentPages = document.querySelector('.content-pagination');
+      const setPages = document.querySelectorAll(
+        '.list-pagination--set-pagination'
+      );
+
+      if (setPages.length < numberSetPages.value + 1) return;
+      const offSetChild = setPages[numberSetPages.value].offsetTop;
+      const scrollTopMain = contentPages.scrollTop;
+
+      contentPages.scrollTop += offSetChild - scrollTopMain;
     };
 
-    const reducePage = () => {
-      page.value -= 1;
-    };
     return {
       pagination,
       count,
-      incrementPage,
-      reducePage,
-      page,
+      nextSetPages,
     };
   },
 });
@@ -76,6 +67,8 @@ export default defineComponent({
   background: #ffffff17;
   border-radius: 12px;
   padding: 5px 0;
+  height: 110px;
+  overflow: hidden;
 
   .list-pagination {
     justify-content: center;
@@ -83,7 +76,7 @@ export default defineComponent({
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
 
     &--item {
       padding: 0px 10px;
